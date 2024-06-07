@@ -10,10 +10,6 @@ pub struct Particle {
     pub acceleration: Vec2,
 }
 
-impl Particle {
-    pub const IDENTITY: Self
-}
-
 impl Default for Particle {
     fn default() -> Self {
         return Particle {

@@ -1,16 +1,19 @@
 mod particle_world;
 mod sim_state;
 mod particle;
+mod entity_map;
 
 use bevy::{
     prelude::*,
     sprite::{MaterialMesh2dBundle, Mesh2dHandle},
 };
 use crate::particle_world::ParticleWorld;
-use crate:: sim_state::WindowState;
+use crate::sim_state::WindowState;
+use crate::entity_map::EntityMap;
 
 fn main() {
     let mut world = ParticleWorld::default();
+    let map_size = Vec2::new(100.0,100.0);
 
     App::new()
         .add_plugins(DefaultPlugins)
