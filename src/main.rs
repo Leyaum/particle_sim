@@ -13,10 +13,10 @@ use crate::entity_map::EntityMap;
 
 fn main() {
     let mut world = ParticleWorld::default();
-    let map_size = Vec2::new(150.0,100.0);
+    let map_size = Vec2::new(100.0,100.0);
 
     let mut map = EntityMap::new(map_size, 10.0);
-    let pos1 = Vec2::new(74.0,0.0);
+    let pos1 = Vec2::new(0.0,0.0);
     map.add_entity(1, pos1);
     //let pos2 = Vec2::new(-5., -5.);
     //map.add_entity(2, pos2);
