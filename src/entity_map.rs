@@ -1,5 +1,7 @@
-use bevy::math::{IVec2, Vec2};
+use bevy::math::{Vec2};
+use bevy::ecs::system::Resource;
 
+#[derive(Resource)]
 pub struct EntityMap {
     map_size: Vec2,
     container_size: f32,
@@ -24,7 +26,6 @@ impl EntityMap {
             let container = Vec::<u32>::new();
             containers.push(container);
         }
-        println!("num containers: {}", containers.len());
 
         return EntityMap {
             map_size: map_size,
@@ -37,20 +38,8 @@ impl EntityMap {
 
     pub fn add_entity(&mut self, id: u32, pos: Vec2) {
         let container_index = self.pos_to_container_index(pos);
-        println!("entity index: {}", container_index);
         let container = &mut self.containers[container_index];
         container.push(id);
-
-        for i in (0..self.rows).rev() {
-            for j in 0..self.cols {
-                if i*self.cols + j == container_index {
-                    print!("X  ");
-                } else {
-                    print!("0  ");
-                }
-            }
-            print!("\n");
-        }
     }
 
     pub fn pos_to_container_index(&mut self, mut pos: Vec2) -> usize {
@@ -77,5 +66,19 @@ impl EntityMap {
         }
 
         return r*self.cols + c;
+    }
+
+    pub fn print_filled_containers(&self) {
+        for i in (0..self.rows).rev() {
+            for j in 0..self.cols {
+                let entities = self.containers[i*self.cols + j].len();
+                if entities > 0 {
+                    print!("{:<3}", entities);
+                } else {
+                    print!("0  ");
+                }
+            }
+            print!("\n");
+        }
     }
 }
