@@ -1,7 +1,8 @@
 use bevy::math::{Vec2};
 use bevy::ecs::system::Resource;
-use bevy::prelude::{Query, Transform};
+use bevy::prelude::{Entity, Query, ResMut, Transform};
 use crate::particle::Particle;
+use crate::rigid_body::RigidBody;
 
 #[derive(Resource)]
 pub struct EntityMap {
@@ -38,10 +39,6 @@ impl EntityMap {
         }
     }
 
-    pub fn map_entities(q: Query<(&Particle, &Transform)>) {
-
-    }
-
     pub fn add_entity(&mut self, id: u32, pos: Vec2) {
         let container_index = self.pos_to_container_index(pos);
         let container = &mut self.containers[container_index];
@@ -75,6 +72,7 @@ impl EntityMap {
     }
 
     pub fn print_filled_containers(&self) {
+        println!();
         for i in (0..self.rows).rev() {
             for j in 0..self.cols {
                 let entities = self.containers[i*self.cols + j].len();
@@ -87,4 +85,22 @@ impl EntityMap {
             print!("\n");
         }
     }
+}
+
+pub fn remap(
+    mut entity_map: ResMut<EntityMap>,
+    q: Query<(Entity, &Transform, &RigidBody)>
+) {
+    for container in &mut entity_map.containers {
+        container.clear();
+    }
+    println!("{}", q.iter().len());
+    for (e, t, rb) in q.iter() {
+        let id = e.index();
+        let x = t.translation.x;
+        let y = t.translation.y;
+        let pos = Vec2::new(x, y);
+        entity_map.add_entity(id, pos);
+    }
+    entity_map.print_filled_containers();
 }
