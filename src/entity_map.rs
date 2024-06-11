@@ -1,5 +1,7 @@
 use bevy::math::{Vec2};
 use bevy::ecs::system::Resource;
+use bevy::prelude::{Query, Transform};
+use crate::particle::Particle;
 
 #[derive(Resource)]
 pub struct EntityMap {
@@ -36,6 +38,10 @@ impl EntityMap {
         }
     }
 
+    pub fn map_entities(q: Query<(&Particle, &Transform)>) {
+
+    }
+
     pub fn add_entity(&mut self, id: u32, pos: Vec2) {
         let container_index = self.pos_to_container_index(pos);
         let container = &mut self.containers[container_index];
@@ -43,8 +49,8 @@ impl EntityMap {
     }
 
     pub fn pos_to_container_index(&mut self, mut pos: Vec2) -> usize {
-        let mut r: usize;
-        let mut c: usize;
+        let r: usize;
+        let c: usize;
 
         pos.x += self.map_size.x / 2.0;
         pos.y += self.map_size.y / 2.0;
