@@ -20,11 +20,14 @@ impl Default for Particle {
 }
 
 impl Particle {
-    pub fn new(pos: Vec2) -> Self {
+    pub fn new(pos: Vec2, velocity: Vec2, acceleration: Vec2) -> Self {
         let transform = Transform::from_xyz(pos.x, pos.y, 0.0);
         Self {
             transform: transform,
-            rigidbody: RigidBody::default(),
+            rigidbody: RigidBody {
+                velocity: velocity,
+                acceleration: acceleration,
+            },
         }
     }
 }

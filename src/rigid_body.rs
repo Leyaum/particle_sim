@@ -15,3 +15,12 @@ impl Default for RigidBody {
         }
     }
 }
+
+impl RigidBody {
+    pub fn new(velocity: Vec2, acceleration: Vec2) -> Self {
+        return RigidBody {
+            velocity: velocity,
+            acceleration: acceleration,
+        }
+    }
+}

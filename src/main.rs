@@ -8,8 +8,10 @@ use bevy::{
     prelude::*,
     sprite::{MaterialMesh2dBundle, Mesh2dHandle},
 };
+use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
 use crate::entity_map::{EntityMap, remap};
 use crate::particle::Particle;
+use crate::rigid_body::RigidBody;
 
 fn main() {
     let map_size = Vec2::new(100.0,100.0);
@@ -17,10 +19,14 @@ fn main() {
 
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_systems(Startup, setup)
-        //.add_systems(Startup, test)
-        .add_systems(Startup, remap)
-        .add_systems(Update, update)
+        .add_plugins(FrameTimeDiagnosticsPlugin)
+        .add_systems(Startup, (
+            setup,
+        ))
+        .add_systems(Update, (
+            update,
+            remap.after(update),
+        ))
         .insert_resource::<EntityMap>(map)
         .run();
 }
@@ -44,8 +50,30 @@ fn setup(
 
 fn update(
     mut commands: Commands,
-    mut entity_map: ResMut<EntityMap>
+    mut entity_map: ResMut<EntityMap>,
+    mut q: Query<(Entity, &mut Transform, &mut RigidBody)>,
+    time: Res<Time>,
 ) {
+    let dt = time.delta_seconds();
+    println!("{}", q.iter().len());
+    for (e, mut t, mut rb) in &mut q {
+        let mut x = t.translation.x;
+        let mut y = t.translation.y;
+
+        let vx = rb.velocity.x;
+        let vy = rb.velocity.y;
+        let ax = rb.acceleration.x;
+        let ay = rb.acceleration.y;
+
+        x += vx*dt + (0.5)*ax*dt*dt;
+        y += vy*dt + (0.5)*ay*dt*dt;
+
+        t.translation.x = x;
+        t.translation.y = y;
+
+        rb.velocity.x += ax*dt;
+        rb.velocity.y += ay*dt;
+    }
 
 }
 
@@ -66,7 +94,11 @@ fn add_particle(
         ..default()
     };
 
-    let particle_component = Particle::new(pos);
+    let particle_component = Particle::new(
+        pos,
+        Vec2::new(1.,0.),
+        Vec2::new(0.,0.)
+    );
     let entity = commands.spawn_empty()
         .insert(mesh_component)
         .insert(particle_component)
