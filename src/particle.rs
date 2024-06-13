@@ -2,7 +2,7 @@ use std::default::Default;
 use bevy::{
     prelude::*,
 };
-use crate::rigid_body::RigidBody;
+use crate::physics::RigidBody;
 
 #[derive(Bundle)]
 pub struct Particle {
