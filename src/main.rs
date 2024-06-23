@@ -50,8 +50,8 @@ fn setup(
         &mut materials,
         &mut entity_map,
         pos1,
-        20.0,
-        Vec2::new(50.0,0.0),
+        100.0,
+        Vec2::new(100.0,0.0),
         Vec2::new(0.0,0.0),
     );
 
