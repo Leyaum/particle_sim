@@ -43,18 +43,18 @@ fn setup(
 ) {
     commands.spawn(Camera2dBundle::default());
 
-    let pos1 = Vec2::new(-250.0, 0.0);
+    let pos1 = Vec2::new(-250.0, 25.0);
     add_particle(
         &mut commands,
         &mut meshes,
         &mut materials,
         &mut entity_map,
         pos1,
-        Vec2::new(10.0,0.0),
+        Vec2::new(0.0,0.0),
         Vec2::new(0.0,0.0),
     );
 
-    let pos2 = Vec2::new(250.0, 0.0);
+    let pos2 = Vec2::new(250.0, 25.0);
     add_particle(
         &mut commands,
         &mut meshes,
@@ -108,7 +108,7 @@ fn add_particle(
         ..default()
     };
 
-    let particle_component = Particle::new(pos, velocity, acceleration);
+    let particle_component = Particle::new(pos, velocity, acceleration, 5.0);
     let entity = commands.spawn_empty()
         .insert(mesh_component)
         .insert(particle_component)
