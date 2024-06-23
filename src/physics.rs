@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use bevy::math::Vec2;
-use bevy::prelude::{Component, Entity, Transform, World};
+use bevy::prelude::{Component, Entity, Query, Res, Time, Transform, World};
 use crate::entity_map::EntityMap;
 use crate::math_helpers::{vector_magnitude, vector_project};
 
@@ -46,7 +46,26 @@ impl Default for CircleCollider {
     }
 }
 
-pub fn calculate_collisions(
+pub fn update_rigid_bodies(
+    mut q: Query<(Entity, &mut Transform, &mut RigidBody)>,
+    time: Res<Time>,
+) {
+    let dt = time.delta_seconds();
+    for (e, mut t, mut rb) in &mut q {
+        let vx = rb.velocity.x;
+        let vy = rb.velocity.y;
+        let ax = rb.acceleration.x;
+        let ay = rb.acceleration.y;
+
+        t.translation.x += vx*dt + (0.5)*ax*dt*dt;
+        t.translation.y += vy*dt + (0.5)*ay*dt*dt;
+
+        rb.velocity.x += ax*dt;
+        rb.velocity.y += ay*dt;
+    }
+}
+
+pub fn resolve_collisions(
     world: &mut World,
 ) {
     if !world.contains_resource::<EntityMap>() {

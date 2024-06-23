@@ -6,7 +6,7 @@ mod physics;
 mod systems;
 mod math_helpers;
 
-use crate::physics::calculate_collisions;
+use crate::physics::{update_rigid_bodies, resolve_collisions};
 use bevy::{
     prelude::*,
     sprite::{MaterialMesh2dBundle, Mesh2dHandle},
@@ -28,9 +28,10 @@ fn main() {
         ))
         .add_systems(Update, (
             update,
-            remap.after(update),
             draw_gizmos,
-            calculate_collisions,
+            update_rigid_bodies,
+            resolve_collisions.after(update_rigid_bodies),
+            remap.after(resolve_collisions)
         ))
         .insert_resource::<EntityMap>(map)
         .run();
@@ -63,7 +64,7 @@ fn setup(
         &mut materials,
         &mut entity_map,
         pos2,
-        20.0,
+        10.0,
         Vec2::new(-200.0, 0.0),
         Vec2::new(0.0, 0.0)
     );
@@ -74,22 +75,8 @@ fn setup(
 fn update(
     mut commands: Commands,
     mut entity_map: ResMut<EntityMap>,
-    mut q: Query<(Entity, &mut Transform, &mut RigidBody)>,
-    time: Res<Time>,
 ) {
-    let dt = time.delta_seconds();
-    for (e, mut t, mut rb) in &mut q {
-        let vx = rb.velocity.x;
-        let vy = rb.velocity.y;
-        let ax = rb.acceleration.x;
-        let ay = rb.acceleration.y;
 
-        t.translation.x += vx*dt + (0.5)*ax*dt*dt;
-        t.translation.y += vy*dt + (0.5)*ay*dt*dt;
-
-        rb.velocity.x += ax*dt;
-        rb.velocity.y += ay*dt;
-    }
 }
 
 fn add_particle(
