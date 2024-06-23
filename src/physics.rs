@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use bevy::math::Vec2;
 use bevy::prelude::{Component, Entity, Transform, World};
 use crate::entity_map::EntityMap;
+use crate::math_helpers::{vector_magnitude, vector_project};
 
 #[derive(Component)]
 #[derive(Clone)]
@@ -77,7 +78,7 @@ pub fn calculate_collisions(
         tot_m += rb.mass * f32::sqrt(rb.velocity.x*rb.velocity.x + rb.velocity.y*rb.velocity.y);
     }
     //println!("Kinetic Energy: {}", tot_ke);
-    //println!("Momentum: {}", tot_m);
+    println!("Momentum: {}", tot_m);
 
     for (
         e,
@@ -85,6 +86,11 @@ pub fn calculate_collisions(
         mut rb,
         c
     ) in query.iter_mut(world) {
+        /*
+            TODO: Precision improvement:
+            Detect collision with raycast to make physics less dependent on discrete timesteps
+        */
+
         /*
             TODO: Collision optimization:
             Skip over particles that aren't moving
@@ -101,8 +107,14 @@ pub fn calculate_collisions(
             let (o_t,o_rb,o_c) = comp_map.get(&other).unwrap();
             let combined_radius = c.radius + o_c.radius;
             if t.translation.distance_squared(o_t.translation) <= combined_radius*combined_radius {
-                //rb.acceleration = Vec2::new(0.,0.);
-                rb.velocity = calculate_collision_trajectory(rb.velocity, o_rb.velocity, rb.mass, o_rb.mass);
+                let displacement = t.translation.truncate() - o_t.translation.truncate();
+                rb.velocity = calculate_collision_trajectory(
+                    rb.velocity,
+                    o_rb.velocity,
+                    rb.mass,
+                    o_rb.mass,
+                    displacement,
+                );
             }
         }
     }
@@ -113,18 +125,20 @@ fn calculate_collision_trajectory(
     mut vel_2: Vec2,
     m1: f32,
     m2: f32,
+    displacement: Vec2,
 ) -> Vec2 {
     // TODO: Account for hitting at an angle
     // to accomplish this we might be able to project
     // the initial velocity of the moving object onto the
     // vector perpendicular to the point the particles collided
     // then use that projected vector as the velocity
+    vel_2 = vector_project(vel_2, displacement);
 
     // Change reference frame to make object 1 at rest
     vel_2 -= vel_1;
 
     // Change reference frame so collision happens on 1 dimension
-    let v2 = f32::sqrt(vel_2.x*vel_2.x + vel_2.y*vel_2.y);
+    let v2 = vector_magnitude(vel_2);
 
     let v1_new = 2.0*m2*v2/(m1+m2);
     //let v2_new = v2*(m2-m1)/(m1+m2);
