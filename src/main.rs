@@ -7,19 +7,24 @@ mod systems;
 mod math_helpers;
 mod debug;
 
-use crate::physics::{update_rigid_bodies, resolve_collisions};
+use crate::physics::{
+    update_rigid_bodies,
+    resolve_particle_collisions,
+    resolve_wall_collisions
+};
 use bevy::{
     prelude::*,
     sprite::{MaterialMesh2dBundle, Mesh2dHandle},
 };
 use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
-use crate::entity_map::{EntityMap, remap};
-use crate::particle::Particle;
-use crate::debug::{draw_gizmos, write_debug_info};
+use rand::random;
+use crate::entity_map::*;
+use crate::particle::*;
+use crate::debug::*;
 
 fn main() {
     let map_size = Vec2::new(500.0,500.0);
-    let map = EntityMap::new(map_size, 50.0);
+    let map = EntityMap::new(map_size, 100.0);
 
     App::new()
         .add_plugins(DefaultPlugins)
@@ -29,13 +34,14 @@ fn main() {
         ))
         .add_systems(Update, (
             update,
-            update_rigid_bodies,
-            resolve_collisions.after(update_rigid_bodies),
-            remap.after(resolve_collisions)
+            update_rigid_bodies.after(update),
+            resolve_particle_collisions.after(update_rigid_bodies),
+            resolve_wall_collisions.after(resolve_particle_collisions),
+            remap.after(resolve_particle_collisions)
         ))
         .add_systems(Update, (
             draw_gizmos,
-            write_debug_info,
+            write_debug_physics,
         ))
         .insert_resource::<EntityMap>(map)
         .run();
@@ -49,7 +55,7 @@ fn setup(
 ) {
     commands.spawn(Camera2dBundle::default());
 
-    let pos1 = Vec2::new(0.0, 250.0);
+    let pos1 = Vec2::new(-200.0, 0.0);
     add_particle(
         &mut commands,
         &mut meshes,
@@ -57,11 +63,11 @@ fn setup(
         &mut entity_map,
         pos1,
         10.0,
-        Vec2::new(0.0,-200.0),
+        Vec2::new(200.0,0.0),
         Vec2::new(0.0,0.0),
     );
 
-    let pos2 = Vec2::new(250.0, 25.0);
+    let pos2 = Vec2::new(200.0, 0.0);
     add_particle(
         &mut commands,
         &mut meshes,
@@ -73,14 +79,35 @@ fn setup(
         Vec2::new(0.0, 0.0)
     );
 
-    entity_map.print_filled_containers();
+    //entity_map.print_filled_containers();
+
+    let debug_text_style = TextStyle {
+        font: Default::default(),
+        font_size: 20.0,
+        color: Default::default(),
+    };
+    commands.spawn((
+        TextBundle::from_sections([
+            TextSection::new(
+                "Kinetic Energy: ",
+                debug_text_style.clone()
+            ),
+            TextSection::from_style(debug_text_style.clone()),
+            TextSection::new(
+                "Linear Momentum: ",
+                debug_text_style.clone()
+            ),
+            TextSection::from_style(debug_text_style.clone())
+        ]),
+        DebugPhysicsText,
+    ));
 }
 
 fn update(
     mut commands: Commands,
     mut entity_map: ResMut<EntityMap>,
 ) {
-
+    //entity_map.print_filled_containers();
 }
 
 fn add_particle(
@@ -97,7 +124,7 @@ fn add_particle(
 
     let circle = Circle {radius: particle_size};
     let mesh = Mesh2dHandle(meshes.add(circle));
-    let color = Color::rgb(1.0, 1.0, 1.0);
+    let color = Color::rgb(random::<f32>(), random::<f32>(), random::<f32>());
     let material = materials.add(color);
     let mesh_component = MaterialMesh2dBundle {
         mesh: mesh,
