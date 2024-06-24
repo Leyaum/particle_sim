@@ -23,8 +23,8 @@ use crate::particle::*;
 use crate::debug::*;
 
 fn main() {
-    let map_size = Vec2::new(500.0,500.0);
-    let map = EntityMap::new(map_size, 100.0);
+    let map_size = Vec2::new(1000.0,500.0);
+    let map = EntityMap::new(map_size, 50.0);
 
     App::new()
         .add_plugins(DefaultPlugins)
