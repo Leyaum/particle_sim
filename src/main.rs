@@ -67,7 +67,7 @@ fn setup(
         Vec2::new(0.0,0.0),
     );
 
-    let pos2 = Vec2::new(200.0, 25.0);
+    let pos2 = Vec2::new(200.0, 0.0);
     add_particle(
         &mut commands,
         &mut meshes,
@@ -120,7 +120,7 @@ fn add_particle(
     velocity: Vec2,
     acceleration: Vec2,
 ) -> Entity {
-    let particle_size = 20.0;
+    let particle_size = 10.0;
 
     let circle = Circle {radius: particle_size};
     let mesh = Mesh2dHandle(meshes.add(circle));

@@ -4,7 +4,11 @@ use bevy::prelude::{Component, Entity, Query, Res, Time, Transform, World};
 use crate::entity_map::EntityMap;
 use crate::math_helpers::{vector_project};
 
-// TODO: Swap all physics related calculations to 64 bit floating point numbers
+/*
+    TODO: Swap all physics related calculations to 64 bit floating point numbers
+    We will keep track of position with our own transform component
+    Update the default transform only before rendering
+*/
 
 #[derive(Component)]
 #[derive(Clone)]
