@@ -63,7 +63,7 @@ fn setup(
         &mut entity_map,
         pos1,
         10.0,
-        Vec2::new(800.0,0.0),
+        Vec2::new(400.0,0.0),
         Vec2::new(0.0,0.0),
     );
 
@@ -75,7 +75,31 @@ fn setup(
         &mut entity_map,
         pos2,
         10.0,
-        Vec2::new(-800.0, 0.0),
+        Vec2::new(-400.0, 0.0),
+        Vec2::new(0.0, 0.0)
+    );
+
+    let pos3 = Vec2::new(0.0, 200.0);
+    add_particle(
+        &mut commands,
+        &mut meshes,
+        &mut materials,
+        &mut entity_map,
+        pos3,
+        10.0,
+        Vec2::new(0.0, -400.0),
+        Vec2::new(0.0, 0.0)
+    );
+
+    let pos4 = Vec2::new(0.0, -200.0);
+    add_particle(
+        &mut commands,
+        &mut meshes,
+        &mut materials,
+        &mut entity_map,
+        pos4,
+        10.0,
+        Vec2::new(0.0, 400.0),
         Vec2::new(0.0, 0.0)
     );
 

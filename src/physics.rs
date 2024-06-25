@@ -139,15 +139,18 @@ pub fn resolve_particle_collisions(
         if (related.len() <= 1) {
             continue;
         }
+
+        let mut num_collisions = 0;
+        let mut total_additive_vel = Vec2::new(0.,0.);
         for other in related {
             if other.index() == e.index() {
                 continue;
             }
             let (o_t,o_rb,o_c) = comp_map.get(&other).unwrap();
             let combined_radius = c.radius + o_c.radius;
-            if t.translation.distance_squared(o_t.translation) <= combined_radius*combined_radius {
+            if t.translation.distance_squared(o_t.translation) < combined_radius*combined_radius {
                 let displacement = t.translation.truncate() - o_t.translation.truncate();
-                rb.velocity = calculate_collision_trajectory(
+                total_additive_vel += calculate_additive_collision_trajectory(
                     rb.velocity,
                     o_rb.velocity,
                     rb.mass,
@@ -156,10 +159,11 @@ pub fn resolve_particle_collisions(
                 );
             }
         }
+        rb.velocity += total_additive_vel;
     }
 }
 
-fn calculate_collision_trajectory(
+fn calculate_additive_collision_trajectory(
     vel_1: Vec2,
     mut vel_2: Vec2,
     m1: f32,
@@ -170,9 +174,5 @@ fn calculate_collision_trajectory(
     vel_2 -= vel_1;
 
     let v1_new = vector_project(vel_2, displacement) * 2.0*m2/(m1+m2);
-
-    // Revert reference frame
-    let trajectory = v1_new + vel_1;
-
-    return trajectory;
+    return v1_new;
 }
