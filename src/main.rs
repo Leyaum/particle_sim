@@ -24,7 +24,7 @@ use crate::debug::*;
 
 fn main() {
     let map_size = Vec2::new(100.0,100.0);
-    let map = EntityMap::new(map_size, 10.0);
+    let map = EntityMap::new(map_size, 100.0);
 
     App::new()
         .add_plugins(DefaultPlugins)
@@ -46,7 +46,7 @@ fn main() {
             write_debug_physics,
         ))
         .insert_resource::<EntityMap>(map)
-        .insert_resource(Time::<Fixed>::from_hz(128.0)) // Power of two for timestep for lossless conversion to floating point
+        .insert_resource(Time::<Fixed>::from_hz(8192.0)) // Power of two for timestep for lossless conversion to floating point
         .run();
 }
 
@@ -70,6 +70,7 @@ fn setup(
         10.0,
         Vec2::new(100.0,0.0),
         Vec2::new(0.0,0.0),
+        2.0
     );
 
     let pos2 = Vec2::new(45.0, 0.0);
@@ -81,9 +82,10 @@ fn setup(
         pos2,
         10.0,
         Vec2::new(-100.0, 0.0),
-        Vec2::new(0.0, 0.0)
+        Vec2::new(0.0, 0.0),
+        2.0
     );
-
+    /*
     let pos3 = Vec2::new(0.0, 45.0);
     add_particle(
         &mut commands,
@@ -93,7 +95,8 @@ fn setup(
         pos3,
         10.0,
         Vec2::new(0.0, -100.0),
-        Vec2::new(0.0, 0.0)
+        Vec2::new(0.0, 0.0),
+        2.0
     );
 
     let pos4 = Vec2::new(0.0, -45.0);
@@ -104,9 +107,11 @@ fn setup(
         &mut entity_map,
         pos4,
         10.0,
-        Vec2::new(0.0, 100.0),
-        Vec2::new(0.0, 0.0)
+        Vec2::new(100.0, 100.0),
+        Vec2::new(0.0, 0.0),
+        2.0,
     );
+    */
 
     //entity_map.print_filled_containers();
 
@@ -148,10 +153,9 @@ fn add_particle(
     mass: f32,
     velocity: Vec2,
     acceleration: Vec2,
+    radius: f32,
 ) -> Entity {
-    let particle_size = 2.0;
-
-    let circle = Circle {radius: particle_size};
+    let circle = Circle {radius: radius};
     let mesh = Mesh2dHandle(meshes.add(circle));
     let color = Color::rgb(random::<f32>(), random::<f32>(), random::<f32>());
     let material = materials.add(color);
@@ -161,7 +165,7 @@ fn add_particle(
         ..default()
     };
 
-    let particle_component = Particle::new(pos, mass, velocity, acceleration, particle_size);
+    let particle_component = Particle::new(pos, mass, velocity, acceleration, radius);
     let entity = commands.spawn_empty()
         .insert(mesh_component)
         .insert(particle_component)

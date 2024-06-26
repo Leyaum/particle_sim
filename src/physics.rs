@@ -56,7 +56,7 @@ pub fn update_rigid_bodies(
     mut q: Query<(Entity, &mut Transform, &mut RigidBody)>,
     time: Res<Time>,
 ) {
-    let dt = time.delta_seconds();
+    let dt = time.delta_seconds() * 1.0;
     for (e, mut t, mut rb) in &mut q {
         let vx = rb.velocity.x;
         let vy = rb.velocity.y;
@@ -105,7 +105,7 @@ pub fn resolve_particle_collisions(
 
     let mut query = world.query::<(
         Entity,
-        &Transform,
+        &mut Transform,
         &mut RigidBody,
         &CircleCollider
     )>();
@@ -118,7 +118,7 @@ pub fn resolve_particle_collisions(
         entities.push(e);
     }
 
-    for (e, t, mut rb, c) in query.iter_mut(world) {
+    for (e, mut t, mut rb, c) in query.iter_mut(world) {
         /*
             TODO: Precision improvement:
             Detect collision with raycast to make physics less dependent on discrete timesteps
