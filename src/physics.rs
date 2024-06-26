@@ -122,7 +122,7 @@ pub fn resolve_particle_collisions(
         /*
             TODO: Precision improvement:
             Detect collision with raycast to make physics less dependent on discrete timesteps
-            This means figuring out exactly when within the last timestep collision occured
+            This means figuring out exactly when within the last timestep collision occurred
             Recalculate velocity and position at that point in time
             Then do the remaining calculations
         */
@@ -140,7 +140,6 @@ pub fn resolve_particle_collisions(
             continue;
         }
 
-        let mut num_collisions = 0;
         let mut total_additive_vel = Vec2::new(0.,0.);
         for other in related {
             if other.index() == e.index() {

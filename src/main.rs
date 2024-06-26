@@ -23,8 +23,8 @@ use crate::particle::*;
 use crate::debug::*;
 
 fn main() {
-    let map_size = Vec2::new(500.0,500.0);
-    let map = EntityMap::new(map_size, 50.0);
+    let map_size = Vec2::new(100.0,100.0);
+    let map = EntityMap::new(map_size, 10.0);
 
     App::new()
         .add_plugins(DefaultPlugins)
@@ -34,16 +34,19 @@ fn main() {
         ))
         .add_systems(Update, (
             update,
-            update_rigid_bodies.after(update),
-            resolve_particle_collisions.after(update_rigid_bodies),
+        ))
+        .add_systems(FixedUpdate, (
+            update_rigid_bodies,
+            remap.after(update_rigid_bodies),
+            resolve_particle_collisions.after(remap),
             resolve_wall_collisions.after(resolve_particle_collisions),
-            remap.after(resolve_particle_collisions)
         ))
         .add_systems(Update, (
             draw_gizmos,
             write_debug_physics,
         ))
         .insert_resource::<EntityMap>(map)
+        .insert_resource(Time::<Fixed>::from_hz(128.0)) // Power of two for timestep for lossless conversion to floating point
         .run();
 }
 
@@ -53,9 +56,11 @@ fn setup(
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut entity_map: ResMut<EntityMap>
 ) {
-    commands.spawn(Camera2dBundle::default());
+    let mut camera_bundle = Camera2dBundle::default();
+    camera_bundle.projection.scale = 0.15;
+    commands.spawn(camera_bundle);
 
-    let pos1 = Vec2::new(-200.0, 0.0);
+    let pos1 = Vec2::new(-45.0, 0.0);
     add_particle(
         &mut commands,
         &mut meshes,
@@ -63,11 +68,11 @@ fn setup(
         &mut entity_map,
         pos1,
         10.0,
-        Vec2::new(400.0,0.0),
+        Vec2::new(100.0,0.0),
         Vec2::new(0.0,0.0),
     );
 
-    let pos2 = Vec2::new(200.0, 0.0);
+    let pos2 = Vec2::new(45.0, 0.0);
     add_particle(
         &mut commands,
         &mut meshes,
@@ -75,11 +80,11 @@ fn setup(
         &mut entity_map,
         pos2,
         10.0,
-        Vec2::new(-400.0, 0.0),
+        Vec2::new(-100.0, 0.0),
         Vec2::new(0.0, 0.0)
     );
 
-    let pos3 = Vec2::new(0.0, 200.0);
+    let pos3 = Vec2::new(0.0, 45.0);
     add_particle(
         &mut commands,
         &mut meshes,
@@ -87,11 +92,11 @@ fn setup(
         &mut entity_map,
         pos3,
         10.0,
-        Vec2::new(0.0, -400.0),
+        Vec2::new(0.0, -100.0),
         Vec2::new(0.0, 0.0)
     );
 
-    let pos4 = Vec2::new(0.0, -200.0);
+    let pos4 = Vec2::new(0.0, -45.0);
     add_particle(
         &mut commands,
         &mut meshes,
@@ -99,7 +104,7 @@ fn setup(
         &mut entity_map,
         pos4,
         10.0,
-        Vec2::new(0.0, 400.0),
+        Vec2::new(0.0, 100.0),
         Vec2::new(0.0, 0.0)
     );
 
@@ -144,7 +149,7 @@ fn add_particle(
     velocity: Vec2,
     acceleration: Vec2,
 ) -> Entity {
-    let particle_size = 10.0;
+    let particle_size = 2.0;
 
     let circle = Circle {radius: particle_size};
     let mesh = Mesh2dHandle(meshes.add(circle));
