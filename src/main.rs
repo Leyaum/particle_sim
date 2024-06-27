@@ -5,6 +5,7 @@ mod entity_map;
 mod physics;
 mod systems;
 
+use crate::physics::calculate_collisions;
 use bevy::{
     prelude::*,
     sprite::{MaterialMesh2dBundle, Mesh2dHandle},
@@ -28,6 +29,7 @@ fn main() {
             update,
             remap.after(update),
             draw_gizmos,
+            calculate_collisions,
         ))
         .insert_resource::<EntityMap>(map)
         .run();

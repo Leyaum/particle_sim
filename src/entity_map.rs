@@ -5,6 +5,7 @@ use crate::particle::Particle;
 use crate::physics::RigidBody;
 
 #[derive(Resource)]
+#[derive(Clone)]
 pub struct EntityMap {
     map_size: Vec2,
     container_size: f32,

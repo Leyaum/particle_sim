@@ -1,6 +1,6 @@
 use bevy::ecs::bundle::DynamicBundle;
 use bevy::math::Vec2;
-use bevy::prelude::{Commands, Component, Entity, Query, ResMut, Transform, World};
+use bevy::prelude::{Commands, Component, Entity, Query, Res, ResMut, Transform, World};
 use crate::entity_map::EntityMap;
 
 #[derive(Component)]
@@ -33,38 +33,37 @@ pub struct CircleCollider {
 }
 
 pub fn calculate_collisions(
-    mut commands: Commands,
     world: &mut World,
-    mut q: Query<(Entity, &Transform, &mut RigidBody, &CircleCollider)>,
 ) {
     if !world.contains_resource::<EntityMap>() {
         return;
     }
+    let entity_map = world.get_resource::<EntityMap>().unwrap().clone();
 
-    let entity_map = world.get_resource::<EntityMap>().unwrap();
+    let mut query = world.query::<(
+        Entity,
+        &Transform,
+        &mut RigidBody,
+        &CircleCollider
+    )>();
 
-    // Collect entities and their data
-    let entities: Vec<(Entity, Vec2, f32)> = q.iter()
-        .map(|(e, t, _, c)| (e, Vec2::new(t.translation.x, t.translation.y), c.radius))
-        .collect();
-
-    for (e, t, mut rb, c) in q.iter_mut() {
+    // put entities with their components in a hashmap or something
+    // that way we don't need to do world.get within the for loops
+    for (
+        e,
+        t,
+        mut rb,
+        c
+    ) in query.iter_mut(world) {
         let pos = Vec2::new(t.translation.x, t.translation.y);
         let related = entity_map.get_related_entities(pos);
-
         for other in related {
-            if other == e {
-                continue;
-            }
-
-            // Use a separate scope to ensure borrows from `world` don't overlap
-            let rel_t = world.get::<Transform>(other).unwrap();
-            let rel_c = world.get::<CircleCollider>(other).unwrap();
-            let related_pos = Vec2::new(rel_t.translation.x, rel_t.translation.y);
-            let combined_radius = c.radius + rel_c.radius;
-            if pos.distance_squared(related_pos) < combined_radius * combined_radius {
-                rb.acceleration = Vec2::new(0.0, 0.0);
-                rb.velocity = Vec2::new(0.0, 0.0);
+            let o_t = world.get::<Transform>(other).unwrap().clone();
+            let o_c = world.get::<CircleCollider>(other).unwrap().clone();
+            let combined_radius = c.radius + o_c.radius;
+            if t.translation.distance_squared(o_t.translation) <= combined_radius * combined_radius {
+                rb.acceleration = Vec2::new(0.,0.);
+                rb.velocity = Vec2::new(0.,0.);
             }
         }
     }
