@@ -94,7 +94,7 @@ pub fn remap(
     for container in &mut entity_map.containers {
         container.clear();
     }
-    println!("{}", q.iter().len());
+
     for (e, t, rb) in q.iter() {
         let id = e.index();
         let x = t.translation.x;
@@ -102,5 +102,4 @@ pub fn remap(
         let pos = Vec2::new(x, y);
         entity_map.add_entity(id, pos);
     }
-    entity_map.print_filled_containers();
 }
