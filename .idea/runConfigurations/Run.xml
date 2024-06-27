@@ -4,6 +4,7 @@
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <envs>
       <env name="PATH" value="C:\Users\lpw71\.rustup\toolchains\stable-x86_64-pc-windows-msvc\bin;C:\Dev\particle_sim\target\debug\deps" />
+      <env name="RUSTFLAGS" value="-A dead_code -A unused_variables" />
     </envs>
     <option name="emulateTerminal" value="true" />
     <option name="channel" value="DEFAULT" />
