@@ -89,6 +89,9 @@ pub fn calculate_collisions(
         /*
             TODO: Precision improvement:
             Detect collision with raycast to make physics less dependent on discrete timesteps
+            This means figuring out exactly when within the last timestep collision occured
+            Recalculate velocity and position at that point in time
+            Then do the remaining calculations
         */
 
         /*
