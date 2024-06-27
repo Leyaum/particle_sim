@@ -1,7 +1,6 @@
 use bevy::math::{IVec2, Vec2};
 use bevy::ecs::system::Resource;
-use bevy::prelude::{Color, Entity, Gizmos, Query, ResMut, Transform};
-use crate::particle::Particle;
+use bevy::prelude::{Entity, Query, ResMut, Transform};
 use crate::physics::RigidBody;
 
 #[derive(Resource)]
@@ -47,9 +46,26 @@ impl EntityMap {
     }
 
     pub fn get_related_entities(&self, pos: Vec2) -> Vec<Entity> {
+        let mut related = Vec::<Entity>::new();
+
         let container_index = self.pos_to_container_index(pos);
-        let container = &self.containers[container_index];
-        return container.clone();
+        let rows = self.rows as i32;
+        let cols = self.cols as i32;
+        let x = (container_index % self.cols) as i32  - 1;
+        let y = (container_index / self.rows) as i32 - 1;
+
+        for i in y..y+3 {
+            if i < 0 || i >= rows { continue; }
+            for j in x..x+3 {
+                if j < 0 || j >= cols { continue; }
+                let container = &self.containers[(i*rows+j) as usize];
+                for &e in container {
+                    related.push(e);
+                }
+            }
+        }
+
+        return related;
     }
 
     pub fn pos_to_container_index(&self, mut pos: Vec2) -> usize {

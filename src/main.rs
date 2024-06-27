@@ -43,25 +43,27 @@ fn setup(
 ) {
     commands.spawn(Camera2dBundle::default());
 
-    let pos1 = Vec2::new(-250.0, 25.0);
+    let pos1 = Vec2::new(-250.0, 0.0);
     add_particle(
         &mut commands,
         &mut meshes,
         &mut materials,
         &mut entity_map,
         pos1,
-        Vec2::new(0.0,0.0),
+        20.0,
+        Vec2::new(50.0,0.0),
         Vec2::new(0.0,0.0),
     );
 
-    let pos2 = Vec2::new(250.0, 25.0);
+    let pos2 = Vec2::new(250.0, 0.0);
     add_particle(
         &mut commands,
         &mut meshes,
         &mut materials,
         &mut entity_map,
         pos2,
-        Vec2::new(-100.0, 0.0),
+        10.0,
+        Vec2::new(-200.0, 0.0),
         Vec2::new(0.0, 0.0)
     );
 
@@ -95,10 +97,13 @@ fn add_particle(
     materials: &mut ResMut<Assets<ColorMaterial>>,
     entity_map: &mut ResMut<EntityMap>,
     pos: Vec2,
+    mass: f32,
     velocity: Vec2,
     acceleration: Vec2,
 ) -> Entity {
-    let circle = Circle {radius: 5.0};
+    let particle_size = 20.0;
+
+    let circle = Circle {radius: particle_size};
     let mesh = Mesh2dHandle(meshes.add(circle));
     let color = Color::rgb(1.0, 1.0, 1.0);
     let material = materials.add(color);
@@ -108,7 +113,7 @@ fn add_particle(
         ..default()
     };
 
-    let particle_component = Particle::new(pos, velocity, acceleration, 5.0);
+    let particle_component = Particle::new(pos, mass, velocity, acceleration, particle_size);
     let entity = commands.spawn_empty()
         .insert(mesh_component)
         .insert(particle_component)
@@ -120,7 +125,7 @@ fn add_particle(
 
 fn draw_gizmos(
     mut gizmos: Gizmos,
-    mut entity_map: ResMut<EntityMap>,
+    entity_map: ResMut<EntityMap>,
 ) {
     let half_x = entity_map.get_map_size().x/2.0;
     let half_y = entity_map.get_map_size().y/2.0;
