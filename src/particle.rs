@@ -1,6 +1,6 @@
+use std::default::Default;
 use bevy::{
     prelude::*,
-    sprite::Material2d,
 };
 use crate::rigid_body::RigidBody;
 
@@ -15,6 +15,16 @@ impl Default for Particle {
         Self {
             transform: Default::default(),
             rigidbody: Default::default(),
+        }
+    }
+}
+
+impl Particle {
+    pub fn new(pos: Vec2) -> Self {
+        let transform = Transform::from_xyz(pos.x, pos.y, 0.0);
+        Self {
+            transform: transform,
+            rigidbody: RigidBody::default(),
         }
     }
 }
