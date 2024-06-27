@@ -63,6 +63,8 @@ pub fn calculate_collisions(
     let mut entities = Vec::<Entity>::new();
     let mut comp_map = HashMap::<Entity,(Transform, RigidBody, CircleCollider)>::new();
 
+    let mut tot_ke = 0.0;
+    let mut tot_m = 0.0;
     for (
         e,
         t,
@@ -71,7 +73,11 @@ pub fn calculate_collisions(
     ) in query.iter(world) {
         comp_map.insert(e,(t.clone(), rb.clone(), c.clone()));
         entities.push(e);
+        tot_ke += 0.5 * rb.mass * f32::sqrt(rb.velocity.x*rb.velocity.x + rb.velocity.y*rb.velocity.y) * f32::sqrt(rb.velocity.x*rb.velocity.x + rb.velocity.y*rb.velocity.y);
+        tot_m += rb.mass * f32::sqrt(rb.velocity.x*rb.velocity.x + rb.velocity.y*rb.velocity.y);
     }
+    //println!("Kinetic Energy: {}", tot_ke);
+    //println!("Momentum: {}", tot_m);
 
     for (
         e,
@@ -95,7 +101,6 @@ pub fn calculate_collisions(
             let (o_t,o_rb,o_c) = comp_map.get(&other).unwrap();
             let combined_radius = c.radius + o_c.radius;
             if t.translation.distance_squared(o_t.translation) <= combined_radius*combined_radius {
-                // TODO: Calculate proper collision
                 //rb.acceleration = Vec2::new(0.,0.);
                 rb.velocity = calculate_collision_trajectory(rb.velocity, o_rb.velocity, rb.mass, o_rb.mass);
             }
@@ -109,14 +114,20 @@ fn calculate_collision_trajectory(
     m1: f32,
     m2: f32,
 ) -> Vec2 {
+    // TODO: Account for hitting at an angle
+    // to accomplish this we might be able to project
+    // the initial velocity of the moving object onto the
+    // vector perpendicular to the point the particles collided
+    // then use that projected vector as the velocity
+
     // Change reference frame to make object 1 at rest
     vel_2 -= vel_1;
 
     // Change reference frame so collision happens on 1 dimension
     let v2 = f32::sqrt(vel_2.x*vel_2.x + vel_2.y*vel_2.y);
 
-    let v1_new = (m2*v2/m1)*((m1-1.0)/(m1+1.0));
-    //let v2_new = (-v2*(m1-1.0)/(m1+1.0));
+    let v1_new = 2.0*m2*v2/(m1+m2);
+    //let v2_new = v2*(m2-m1)/(m1+m2);
 
     // Revert reference frame
     let trajectory = vel_2.normalize_or_zero() * v1_new + vel_1;
