@@ -24,7 +24,7 @@ use crate::debug::*;
 
 fn main() {
     let map_size = Vec2::new(100.0,100.0);
-    let map = EntityMap::new(map_size, 100.0);
+    let map = EntityMap::new(map_size, 10.0);
 
     App::new()
         .add_plugins(DefaultPlugins)
