@@ -4,7 +4,11 @@ use bevy::prelude::{Component, Entity, Query, Res, Time, Transform, World};
 use crate::entity_map::EntityMap;
 use crate::math_helpers::{vector_project};
 
-// TODO: Swap all physics related calculations to 64 bit floating point numbers
+/*
+    TODO: Swap all physics related calculations to 64 bit floating point numbers
+    We will keep track of position with our own transform component
+    Update the default transform only before rendering
+*/
 
 #[derive(Component)]
 #[derive(Clone)]
@@ -52,7 +56,7 @@ pub fn update_rigid_bodies(
     mut q: Query<(Entity, &mut Transform, &mut RigidBody)>,
     time: Res<Time>,
 ) {
-    let dt = time.delta_seconds();
+    let dt = time.delta_seconds() * 1.0;
     for (e, mut t, mut rb) in &mut q {
         let vx = rb.velocity.x;
         let vy = rb.velocity.y;
@@ -101,7 +105,7 @@ pub fn resolve_particle_collisions(
 
     let mut query = world.query::<(
         Entity,
-        &Transform,
+        &mut Transform,
         &mut RigidBody,
         &CircleCollider
     )>();
@@ -114,11 +118,11 @@ pub fn resolve_particle_collisions(
         entities.push(e);
     }
 
-    for (e, t, mut rb, c) in query.iter_mut(world) {
+    for (e, mut t, mut rb, c) in query.iter_mut(world) {
         /*
             TODO: Precision improvement:
             Detect collision with raycast to make physics less dependent on discrete timesteps
-            This means figuring out exactly when within the last timestep collision occured
+            This means figuring out exactly when within the last timestep collision occurred
             Recalculate velocity and position at that point in time
             Then do the remaining calculations
         */
@@ -135,15 +139,17 @@ pub fn resolve_particle_collisions(
         if (related.len() <= 1) {
             continue;
         }
+
+        let mut total_additive_vel = Vec2::new(0.,0.);
         for other in related {
             if other.index() == e.index() {
                 continue;
             }
             let (o_t,o_rb,o_c) = comp_map.get(&other).unwrap();
             let combined_radius = c.radius + o_c.radius;
-            if t.translation.distance_squared(o_t.translation) <= combined_radius*combined_radius {
+            if t.translation.distance_squared(o_t.translation) < combined_radius*combined_radius {
                 let displacement = t.translation.truncate() - o_t.translation.truncate();
-                rb.velocity = calculate_collision_trajectory(
+                total_additive_vel += calculate_additive_collision_trajectory(
                     rb.velocity,
                     o_rb.velocity,
                     rb.mass,
@@ -152,10 +158,11 @@ pub fn resolve_particle_collisions(
                 );
             }
         }
+        rb.velocity += total_additive_vel;
     }
 }
 
-fn calculate_collision_trajectory(
+fn calculate_additive_collision_trajectory(
     vel_1: Vec2,
     mut vel_2: Vec2,
     m1: f32,
@@ -166,9 +173,5 @@ fn calculate_collision_trajectory(
     vel_2 -= vel_1;
 
     let v1_new = vector_project(vel_2, displacement) * 2.0*m2/(m1+m2);
-
-    // Revert reference frame
-    let trajectory = v1_new + vel_1;
-
-    return trajectory;
+    return v1_new;
 }
