@@ -24,3 +24,9 @@ impl RigidBody {
         }
     }
 }
+
+#[derive(Component)]
+pub struct CircleCollider {
+    radius: f32,
+
+}

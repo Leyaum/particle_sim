@@ -1,8 +1,8 @@
-use bevy::math::{Vec2};
+use bevy::math::{IVec2, Vec2};
 use bevy::ecs::system::Resource;
-use bevy::prelude::{Entity, Query, ResMut, Transform};
+use bevy::prelude::{Color, Entity, Gizmos, Query, ResMut, Transform};
 use crate::particle::Particle;
-use crate::rigid_body::RigidBody;
+use crate::physics::RigidBody;
 
 #[derive(Resource)]
 pub struct EntityMap {
@@ -84,6 +84,18 @@ impl EntityMap {
             }
             print!("\n");
         }
+    }
+
+    pub fn get_map_size(&self) -> Vec2 {
+        return self.map_size;
+    }
+
+    pub fn get_map_dims(&self) -> IVec2 {
+        return IVec2::new(self.cols as i32, self.rows as i32);
+    }
+
+    pub fn get_container_size(&self) -> f32 {
+        return self.container_size;
     }
 }
 
