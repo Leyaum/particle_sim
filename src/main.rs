@@ -8,7 +8,7 @@ use bevy::{
     prelude::*,
     sprite::{MaterialMesh2dBundle, Mesh2dHandle},
 };
-use crate::entity_map::EntityMap;
+use crate::entity_map::{EntityMap, remap};
 use crate::particle::Particle;
 
 fn main() {
@@ -19,6 +19,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_systems(Startup, setup)
         //.add_systems(Startup, test)
+        .add_systems(Startup, remap)
         .add_systems(Update, update)
         .insert_resource::<EntityMap>(map)
         .run();
