@@ -52,13 +52,13 @@ impl EntityMap {
         let rows = self.rows as i32;
         let cols = self.cols as i32;
         let x = (container_index % self.cols) as i32  - 1;
-        let y = (container_index / self.rows) as i32 - 1;
+        let y = (container_index / self.cols) as i32 - 1;
 
         for i in y..y+3 {
             if i < 0 || i >= rows { continue; }
             for j in x..x+3 {
                 if j < 0 || j >= cols { continue; }
-                let container = &self.containers[(i*rows+j) as usize];
+                let container = &self.containers[(i*cols+j) as usize];
                 for &e in container {
                     related.push(e);
                 }

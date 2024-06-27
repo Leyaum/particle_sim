@@ -23,7 +23,7 @@ use crate::particle::*;
 use crate::debug::*;
 
 fn main() {
-    let map_size = Vec2::new(1000.0,500.0);
+    let map_size = Vec2::new(500.0,500.0);
     let map = EntityMap::new(map_size, 50.0);
 
     App::new()
@@ -63,11 +63,11 @@ fn setup(
         &mut entity_map,
         pos1,
         10.0,
-        Vec2::new(200.0,0.0),
+        Vec2::new(800.0,0.0),
         Vec2::new(0.0,0.0),
     );
 
-    let pos2 = Vec2::new(200.0, 0.0);
+    let pos2 = Vec2::new(200.0, 25.0);
     add_particle(
         &mut commands,
         &mut meshes,
@@ -75,7 +75,7 @@ fn setup(
         &mut entity_map,
         pos2,
         10.0,
-        Vec2::new(-200.0, 0.0),
+        Vec2::new(-800.0, 0.0),
         Vec2::new(0.0, 0.0)
     );
 
