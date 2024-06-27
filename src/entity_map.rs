@@ -44,9 +44,9 @@ impl EntityMap {
         for i in (0..self.rows).rev() {
             for j in 0..self.cols {
                 if i*self.cols + j == container_index {
-                    print!("X ");
+                    print!("X  ");
                 } else {
-                    print!("0 ");
+                    print!("0  ");
                 }
             }
             print!("\n");
@@ -54,21 +54,28 @@ impl EntityMap {
     }
 
     pub fn pos_to_container_index(&mut self, mut pos: Vec2) -> usize {
+        let mut r: usize;
+        let mut c: usize;
+
         pos.x += self.map_size.x / 2.0;
         pos.y += self.map_size.y / 2.0;
-        if pos.x > self.map_size.x {
-            pos.x = self.map_size.x;
+
+        if pos.x >= self.map_size.x {
+            c = self.cols-1;
         } else if pos.x < 0.0 {
-            pos.x = 0.0;
-        }
-        if pos.y > self.map_size.y {
-            pos.y = self.map_size.y;
-        } else if pos.y < 0.0 {
-            pos.y = 0.0;
+            c = 0;
+        } else {
+            c = (pos.x / self.container_size) as usize;
         }
 
-        let r = (pos.y / self.container_size) as usize;
-        let c = (pos.x / self.container_size) as usize;
+        if pos.y >= self.map_size.y {
+            r = self.rows-1;
+        } else if pos.y < 0.0 {
+            r = 0;
+        } else {
+            r = (pos.y / self.container_size) as usize;
+        }
+
         return r*self.cols + c;
     }
 }
