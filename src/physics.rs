@@ -65,7 +65,7 @@ pub fn calculate_collisions(
     let mut comp_map = HashMap::<Entity,(Transform, RigidBody, CircleCollider)>::new();
 
     let mut tot_ke = 0.0;
-    let mut tot_m = 0.0;
+    let mut tot_lm = Vec2::new(0.,0.);
     for (
         e,
         t,
@@ -74,11 +74,10 @@ pub fn calculate_collisions(
     ) in query.iter(world) {
         comp_map.insert(e,(t.clone(), rb.clone(), c.clone()));
         entities.push(e);
-        tot_ke += 0.5 * rb.mass * f32::sqrt(rb.velocity.x*rb.velocity.x + rb.velocity.y*rb.velocity.y) * f32::sqrt(rb.velocity.x*rb.velocity.x + rb.velocity.y*rb.velocity.y);
-        tot_m += rb.mass * f32::sqrt(rb.velocity.x*rb.velocity.x + rb.velocity.y*rb.velocity.y);
+        tot_ke += 0.5 * rb.mass * rb.velocity.length_squared();
+        tot_lm += rb.mass * rb.velocity;
     }
-    //println!("Kinetic Energy: {}", tot_ke);
-    println!("Momentum: {}", tot_m);
+    println!("Kinetic Energy: {tot_ke}, Linear Momentum: {tot_lm}");
 
     for (
         e,
@@ -130,21 +129,15 @@ fn calculate_collision_trajectory(
     m2: f32,
     displacement: Vec2,
 ) -> Vec2 {
-    // TODO: Account for hitting at an angle
-    // to accomplish this we might be able to project
-    // the initial velocity of the moving object onto the
-    // vector perpendicular to the point the particles collided
-    // then use that projected vector as the velocity
-    vel_2 = vector_project(vel_2, displacement);
-
     // Change reference frame to make object 1 at rest
     vel_2 -= vel_1;
+
+    vel_2 = vector_project(vel_2, displacement);
 
     // Change reference frame so collision happens on 1 dimension
     let v2 = vector_magnitude(vel_2);
 
     let v1_new = 2.0*m2*v2/(m1+m2);
-    //let v2_new = v2*(m2-m1)/(m1+m2);
 
     // Revert reference frame
     let trajectory = vel_2.normalize_or_zero() * v1_new + vel_1;
