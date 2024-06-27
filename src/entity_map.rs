@@ -11,7 +11,7 @@ pub struct EntityMap {
 
     rows: usize,
     cols: usize,
-    containers: Vec<Vec<u32>>,
+    containers: Vec<Vec<Entity>>,
 }
 
 impl EntityMap {
@@ -24,9 +24,9 @@ impl EntityMap {
 
         let cols = (map_size.x / container_size).ceil() as usize;
         let rows = (map_size.y / container_size).ceil() as usize;
-        let mut containers = Vec::<Vec<u32>>::with_capacity(rows*cols);
+        let mut containers = Vec::<Vec<Entity>>::with_capacity(rows*cols);
         for i in 0..rows*cols {
-            let container = Vec::<u32>::new();
+            let container = Vec::<Entity>::new();
             containers.push(container);
         }
 
@@ -39,13 +39,19 @@ impl EntityMap {
         }
     }
 
-    pub fn add_entity(&mut self, id: u32, pos: Vec2) {
+    pub fn add_entity(&mut self, entity: Entity, pos: Vec2) {
         let container_index = self.pos_to_container_index(pos);
         let container = &mut self.containers[container_index];
-        container.push(id);
+        container.push(entity);
     }
 
-    pub fn pos_to_container_index(&mut self, mut pos: Vec2) -> usize {
+    pub fn get_related_entities(&self, pos: Vec2) -> Vec<Entity> {
+        let container_index = self.pos_to_container_index(pos);
+        let container = &self.containers[container_index];
+        return container.clone();
+    }
+
+    pub fn pos_to_container_index(&self, mut pos: Vec2) -> usize {
         let r: usize;
         let c: usize;
 
@@ -108,10 +114,9 @@ pub fn remap(
     }
 
     for (e, t, rb) in q.iter() {
-        let id = e.index();
         let x = t.translation.x;
         let y = t.translation.y;
         let pos = Vec2::new(x, y);
-        entity_map.add_entity(id, pos);
+        entity_map.add_entity(e, pos);
     }
 }

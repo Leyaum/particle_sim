@@ -41,26 +41,26 @@ fn setup(
 ) {
     commands.spawn(Camera2dBundle::default());
 
-    let pos1 = Vec2::new(25.0, 25.0);
+    let pos1 = Vec2::new(-250.0, 0.0);
     add_particle(
         &mut commands,
         &mut meshes,
         &mut materials,
         &mut entity_map,
         pos1,
-        Vec2::new(10.0,10.0),
-        Vec2::new(100.0,100.0),
+        Vec2::new(10.0,0.0),
+        Vec2::new(0.0,0.0),
     );
 
-    let pos2 = Vec2::new(-25.0, -25.0);
+    let pos2 = Vec2::new(250.0, 0.0);
     add_particle(
         &mut commands,
         &mut meshes,
         &mut materials,
         &mut entity_map,
         pos2,
-        Vec2::new(-500.0, 10.0),
-        Vec2::new(100.0, 0.0)
+        Vec2::new(-100.0, 0.0),
+        Vec2::new(0.0, 0.0)
     );
 
     entity_map.print_filled_containers();
@@ -95,7 +95,7 @@ fn add_particle(
     pos: Vec2,
     velocity: Vec2,
     acceleration: Vec2,
-) -> u32 {
+) -> Entity {
     let circle = Circle {radius: 5.0};
     let mesh = Mesh2dHandle(meshes.add(circle));
     let color = Color::rgb(1.0, 1.0, 1.0);
@@ -111,10 +111,9 @@ fn add_particle(
         .insert(mesh_component)
         .insert(particle_component)
         .id();
-    let id = entity.index();
-    entity_map.add_entity(id, pos);
+    entity_map.add_entity(entity, pos);
 
-    return id;
+    return entity;
 }
 
 fn draw_gizmos(
