@@ -1,5 +1,6 @@
 use bevy::math::Vec2;
-use bevy::prelude::{Color, Gizmos, Query, ResMut};
+use bevy::prelude::{Color, Component, Gizmos, Query, ResMut, With};
+use bevy::text::Text;
 use crate::entity_map::EntityMap;
 use crate::physics::RigidBody;
 
@@ -40,14 +41,22 @@ pub fn draw_gizmos(
     }
 }
 
-pub fn write_debug_info(
-    q: Query<(&mut RigidBody)>
+#[derive(Component)]
+pub struct DebugPhysicsText;
+
+pub fn write_debug_physics(
+    q_rb: Query<&RigidBody>,
+    mut q_text: Query<(&mut Text, &DebugPhysicsText)>
 ) {
     let mut tot_ke = 0.0;
     let mut tot_lm = Vec2::default();
-    for rb in q.iter() {
+    for rb in q_rb.iter() {
         tot_ke += 0.5 * rb.mass * rb.velocity.length_squared();
         tot_lm += rb.mass * rb.velocity;
     }
-    println!("Kinetic Energy: {tot_ke}, Linear Momentum: {tot_lm}");
+
+    for (mut text, _) in q_text.iter_mut() {
+        text.sections[1].value = format!("{tot_ke}\n");
+        text.sections[3].value = format!("{tot_lm}\n");
+    }
 }

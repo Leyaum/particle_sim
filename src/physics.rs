@@ -2,7 +2,9 @@ use std::collections::HashMap;
 use bevy::math::Vec2;
 use bevy::prelude::{Component, Entity, Query, Res, Time, Transform, World};
 use crate::entity_map::EntityMap;
-use crate::math_helpers::{vector_magnitude, vector_project};
+use crate::math_helpers::{vector_project};
+
+// TODO: Swap all physics related calculations to 64 bit floating point numbers
 
 #[derive(Component)]
 #[derive(Clone)]
@@ -65,7 +67,31 @@ pub fn update_rigid_bodies(
     }
 }
 
-pub fn resolve_collisions(
+pub fn resolve_wall_collisions(
+    entity_map: Res<EntityMap>,
+    mut q: Query<(&Transform, &mut RigidBody, &CircleCollider)>
+) {
+    // TODO: Calculate collisions with raycasts to be more precise
+    // TODO: Get only entities that are on edge containers in the entity_map
+    for (t, mut rb, c) in q.iter_mut() {
+        let x_size = entity_map.get_map_size().x / 2.0;
+        let y_size = entity_map.get_map_size().y / 2.0;
+
+        if t.translation.x - c.radius <= -x_size && rb.velocity.x < 0.0 {
+            rb.velocity.x *= -1.0;
+        } else if t.translation.x + c.radius >= x_size && rb.velocity.x > 0.0  {
+            rb.velocity.x *= -1.0;
+        }
+
+        if t.translation.y - c.radius <= -y_size && rb.velocity.y < 0.0 {
+            rb.velocity.y *= -1.0;
+        } else if t.translation.y + c.radius >= y_size && rb.velocity.y > 0.0  {
+            rb.velocity.y *= -1.0;
+        }
+    }
+}
+
+pub fn resolve_particle_collisions(
     world: &mut World,
 ) {
     if !world.contains_resource::<EntityMap>() {
@@ -83,22 +109,12 @@ pub fn resolve_collisions(
     let mut entities = Vec::<Entity>::new();
     let mut comp_map = HashMap::<Entity,(Transform, RigidBody, CircleCollider)>::new();
 
-    for (
-        e,
-        t,
-        rb,
-        c
-    ) in query.iter(world) {
+    for (e, t, rb, c) in query.iter(world) {
         comp_map.insert(e,(t.clone(), rb.clone(), c.clone()));
         entities.push(e);
     }
 
-    for (
-        e,
-        t,
-        mut rb,
-        c
-    ) in query.iter_mut(world) {
+    for (e, t, mut rb, c) in query.iter_mut(world) {
         /*
             TODO: Precision improvement:
             Detect collision with raycast to make physics less dependent on discrete timesteps
@@ -116,6 +132,9 @@ pub fn resolve_collisions(
 
         let pos = Vec2::new(t.translation.x, t.translation.y);
         let related = entity_map.get_related_entities(pos);
+        if (related.len() <= 1) {
+            continue;
+        }
         for other in related {
             if other.index() == e.index() {
                 continue;
