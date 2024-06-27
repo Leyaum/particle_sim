@@ -4,6 +4,7 @@ mod particle;
 mod entity_map;
 mod physics;
 mod systems;
+mod math_helpers;
 
 use crate::physics::calculate_collisions;
 use bevy::{
@@ -43,15 +44,15 @@ fn setup(
 ) {
     commands.spawn(Camera2dBundle::default());
 
-    let pos1 = Vec2::new(-250.0, 0.0);
+    let pos1 = Vec2::new(0.0, 250.0);
     add_particle(
         &mut commands,
         &mut meshes,
         &mut materials,
         &mut entity_map,
         pos1,
-        100.0,
-        Vec2::new(100.0,0.0),
+        10.0,
+        Vec2::new(0.0,-200.0),
         Vec2::new(0.0,0.0),
     );
 
