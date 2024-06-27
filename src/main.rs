@@ -5,6 +5,7 @@ mod entity_map;
 mod physics;
 mod systems;
 mod math_helpers;
+mod debug;
 
 use crate::physics::{update_rigid_bodies, resolve_collisions};
 use bevy::{
@@ -14,7 +15,7 @@ use bevy::{
 use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
 use crate::entity_map::{EntityMap, remap};
 use crate::particle::Particle;
-use crate::physics::RigidBody;
+use crate::debug::{draw_gizmos, write_debug_info};
 
 fn main() {
     let map_size = Vec2::new(500.0,500.0);
@@ -28,10 +29,13 @@ fn main() {
         ))
         .add_systems(Update, (
             update,
-            draw_gizmos,
             update_rigid_bodies,
             resolve_collisions.after(update_rigid_bodies),
             remap.after(resolve_collisions)
+        ))
+        .add_systems(Update, (
+            draw_gizmos,
+            write_debug_info,
         ))
         .insert_resource::<EntityMap>(map)
         .run();
@@ -109,41 +113,4 @@ fn add_particle(
     entity_map.add_entity(entity, pos);
 
     return entity;
-}
-
-fn draw_gizmos(
-    mut gizmos: Gizmos,
-    entity_map: ResMut<EntityMap>,
-) {
-    let half_x = entity_map.get_map_size().x/2.0;
-    let half_y = entity_map.get_map_size().y/2.0;
-
-    let bot_left = Vec2::new(-half_x, -half_y);
-    let top_left = Vec2::new(-half_x, half_y);
-    let bot_right = Vec2::new(half_x, -half_y);
-
-    let color = Color::rgb(0.,0.,0.);
-
-    let dims = entity_map.get_map_dims();
-    let container_size = entity_map.get_container_size();
-
-    let mut offset = Vec2::new(0.,0.);
-    for i in 0..=dims.x {
-        gizmos.line_2d(
-            bot_left + offset,
-            top_left + offset,
-            color
-        );
-        offset += Vec2::new(container_size, 0.);
-    }
-
-    offset = Vec2::new(0.,0.);
-    for i in 0..=dims.y {
-        gizmos.line_2d(
-            bot_left + offset,
-            bot_right + offset,
-            color
-        );
-        offset += Vec2::new(0., container_size);
-    }
 }
