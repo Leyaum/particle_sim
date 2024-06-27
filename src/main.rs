@@ -74,19 +74,13 @@ fn update(
 ) {
     let dt = time.delta_seconds();
     for (e, mut t, mut rb) in &mut q {
-        let mut x = t.translation.x;
-        let mut y = t.translation.y;
-
         let vx = rb.velocity.x;
         let vy = rb.velocity.y;
         let ax = rb.acceleration.x;
         let ay = rb.acceleration.y;
 
-        x += vx*dt + (0.5)*ax*dt*dt;
-        y += vy*dt + (0.5)*ay*dt*dt;
-
-        t.translation.x = x;
-        t.translation.y = y;
+        t.translation.x += vx*dt + (0.5)*ax*dt*dt;
+        t.translation.y += vy*dt + (0.5)*ay*dt*dt;
 
         rb.velocity.x += ax*dt;
         rb.velocity.y += ay*dt;
