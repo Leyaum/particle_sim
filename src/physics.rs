@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use bevy::math::Vec2;
 use bevy::prelude::{Component, Entity, Query, Res, Time, Transform, World};
 use crate::entity_map::EntityMap;
-use crate::math_helpers::{vector_project};
+use crate::math_helpers::{quadratic_formula, vector_project};
 
 /*
     TODO: Swap all physics related calculations to 64 bit floating point numbers
@@ -148,6 +148,14 @@ pub fn resolve_particle_collisions(
             let (o_t,o_rb,o_c) = comp_map.get(&other).unwrap();
             let combined_radius = c.radius + o_c.radius;
             if t.translation.distance_squared(o_t.translation) < combined_radius*combined_radius {
+                let collision_time = calculate_exact_collision_time(
+                    t.translation.truncate(),
+                    o_t.translation.truncate(),
+                    rb.clone(),
+                    o_rb.clone(),
+                    combined_radius
+                );
+                println!("collisions time: {}", collision_time);
                 let displacement = t.translation.truncate() - o_t.translation.truncate();
                 total_additive_vel += calculate_additive_collision_trajectory(
                     rb.velocity,
@@ -174,4 +182,40 @@ fn calculate_additive_collision_trajectory(
 
     let v1_new = vector_project(vel_2, displacement) * 2.0*m2/(m1+m2);
     return v1_new;
+}
+
+fn calculate_exact_collision_time(
+    x1: Vec2,
+    x2: Vec2,
+    rb1: RigidBody,
+    rb2: RigidBody,
+    combined_radius: f32,
+) -> f32 {
+    let a_x = 0.5 * (rb2.acceleration.x - rb1.acceleration.x);
+    let b_x = (rb2.velocity.x-rb2.acceleration.x) - (rb1.velocity.x-rb1.acceleration.x);
+    let c_x = x1.x - x2.x - combined_radius;
+    let mut t_x = (-c_x/b_x, -c_x/b_x);
+    if a_x != 0.0 {
+        t_x = quadratic_formula(a_x, b_x, c_x);
+    }
+
+    let a_y = 0.5 * (rb2.acceleration.y - rb1.acceleration.y);
+    let b_y = (rb2.velocity.x-rb2.acceleration.x) - (rb1.velocity.x-rb1.acceleration.x);
+    let c_y = x1.y - x2.y - combined_radius;
+    let mut t_y = (-c_y * b_y, -c_y * b_y);
+    if a_y != 0.0 {
+        t_y = quadratic_formula(a_y, b_y, c_y);
+    }
+
+    let t_x_0 = t_x.0;
+    let t_x_1 = t_x.1;
+    let t_y_0 = t_y.0;
+    let t_y_1 = t_y.1;
+
+    if t_x.0 == t_y.0 || t_x.0 == t_y.1 {
+        return t_x.0;
+    } if t_x.1 == t_y.1 || t_x.1 == t_y.0 {
+        return t_x.1;
+    }
+    return 0.0;
 }

@@ -46,7 +46,7 @@ fn main() {
             write_debug_physics,
         ))
         .insert_resource::<EntityMap>(map)
-        .insert_resource(Time::<Fixed>::from_hz(8192.0)) // Power of two for timestep for lossless conversion to floating point
+        .insert_resource(Time::<Fixed>::from_hz(128.0)) // Power of two for timestep for lossless conversion to floating point
         .run();
 }
 
