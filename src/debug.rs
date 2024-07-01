@@ -1,5 +1,5 @@
 use bevy::math::Vec2;
-use bevy::prelude::{Color, Component, Gizmos, Query, ResMut, With};
+use bevy::prelude::{Color, Component, Gizmos, Query, ResMut};
 use bevy::text::Text;
 use crate::entity_map::EntityMap;
 use crate::physics::RigidBody;

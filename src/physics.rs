@@ -136,7 +136,7 @@ pub fn resolve_particle_collisions(
 
         let pos = Vec2::new(t.translation.x, t.translation.y);
         let related = entity_map.get_related_entities(pos);
-        if (related.len() <= 1) {
+        if related.len() <= 1 {
             continue;
         }
 
@@ -156,6 +156,10 @@ pub fn resolve_particle_collisions(
                     combined_radius
                 );
                 println!("collisions time: {}", collision_time);
+
+                t.translation.x += rb.velocity.x * collision_time + 0.5 * rb.acceleration.x * collision_time * collision_time;
+                t.translation.y += rb.velocity.y * collision_time + 0.5 * rb.acceleration.y * collision_time * collision_time;
+
                 let displacement = t.translation.truncate() - o_t.translation.truncate();
                 total_additive_vel += calculate_additive_collision_trajectory(
                     rb.velocity,
@@ -191,18 +195,28 @@ fn calculate_exact_collision_time(
     rb2: RigidBody,
     combined_radius: f32,
 ) -> f32 {
+    let radius_vector = (x2 - x1).normalize_or_zero() * combined_radius;
+
     let a_x = 0.5 * (rb2.acceleration.x - rb1.acceleration.x);
     let b_x = (rb2.velocity.x-rb2.acceleration.x) - (rb1.velocity.x-rb1.acceleration.x);
-    let c_x = x1.x - x2.x - combined_radius;
+    let c_x = x1.x - x2.x - radius_vector.x;
     let mut t_x = (-c_x/b_x, -c_x/b_x);
+    if f32::is_nan(t_x.0) {
+        t_x = (f32::INFINITY, f32::INFINITY);
+    }
+    println!("t_x: {0}", t_x.0);
     if a_x != 0.0 {
         t_x = quadratic_formula(a_x, b_x, c_x);
     }
 
     let a_y = 0.5 * (rb2.acceleration.y - rb1.acceleration.y);
-    let b_y = (rb2.velocity.x-rb2.acceleration.x) - (rb1.velocity.x-rb1.acceleration.x);
-    let c_y = x1.y - x2.y - combined_radius;
-    let mut t_y = (-c_y * b_y, -c_y * b_y);
+    let b_y = (rb2.velocity.y-rb2.acceleration.y) - (rb1.velocity.y-rb1.acceleration.y);
+    let c_y = x1.y - x2.y - radius_vector.y;
+    let mut t_y = (-c_y/b_y, -c_y/b_y);
+    if f32::is_nan(t_y.0) {
+        t_y = (f32::INFINITY, f32::INFINITY);
+    }
+    println!("t_y: {0}", t_y.0);
     if a_y != 0.0 {
         t_y = quadratic_formula(a_y, b_y, c_y);
     }
@@ -211,6 +225,14 @@ fn calculate_exact_collision_time(
     let t_x_1 = t_x.1;
     let t_y_0 = t_y.0;
     let t_y_1 = t_y.1;
+
+    if f32::is_infinite(t_x.0) && f32::is_infinite(t_y.0)  {
+        return 0.0;
+    } if f32::is_infinite(t_x.0) {
+        return t_y.0;
+    } if f32::is_infinite(t_y.0) {
+        return t_x.0;
+    }
 
     if t_x.0 == t_y.0 || t_x.0 == t_y.1 {
         return t_x.0;
