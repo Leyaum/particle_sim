@@ -36,8 +36,8 @@ fn main() {
             update,
         ))
         .add_systems(FixedUpdate, (
-            update_rigid_bodies,
-            remap.after(update_rigid_bodies),
+            remap,
+            update_rigid_bodies.after(remap),
             resolve_particle_collisions.after(remap),
             resolve_wall_collisions.after(resolve_particle_collisions),
         ))
@@ -46,7 +46,7 @@ fn main() {
             write_debug_physics,
         ))
         .insert_resource::<EntityMap>(map)
-        .insert_resource(Time::<Fixed>::from_hz(32.0)) // Power of two for timestep for lossless conversion to floating point
+        .insert_resource(Time::<Fixed>::from_hz(8.0)) // Power of two for timestep for lossless conversion to floating point
         .run();
 }
 
@@ -68,7 +68,7 @@ fn setup(
         &mut entity_map,
         pos1,
         10.0,
-        Vec2::new(100.0,0.0),
+        Vec2::new(50.0,0.0),
         Vec2::new(0.0,0.0),
         2.0
     );
@@ -81,11 +81,11 @@ fn setup(
         &mut entity_map,
         pos2,
         10.0,
-        Vec2::new(-100.0, 0.0),
+        Vec2::new(-50.0, 0.0),
         Vec2::new(0.0, 0.0),
         2.0
     );
-    /*
+
     let pos3 = Vec2::new(0.0, 45.0);
     add_particle(
         &mut commands,
@@ -94,7 +94,7 @@ fn setup(
         &mut entity_map,
         pos3,
         10.0,
-        Vec2::new(0.0, -100.0),
+        Vec2::new(0.0, -50.0),
         Vec2::new(0.0, 0.0),
         2.0
     );
@@ -107,11 +107,10 @@ fn setup(
         &mut entity_map,
         pos4,
         10.0,
-        Vec2::new(100.0, 100.0),
+        Vec2::new(0.0, 50.0),
         Vec2::new(0.0, 0.0),
         2.0,
     );
-    */
 
     //entity_map.print_filled_containers();
 

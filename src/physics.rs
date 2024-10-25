@@ -36,6 +36,14 @@ impl RigidBody {
             acceleration: acceleration,
         }
     }
+
+    // returns position of particle using its current trajectory
+    pub fn calc_delta_position(&self, t: f32) -> Vec2 {
+        let mut delta = Vec2::new(0.,0.);
+        delta.x = self.velocity.x * t + 0.5 * self.acceleration.x * t*t;
+        delta.y = self.velocity.y * t + 0.5 * self.acceleration.y * t*t;
+        return delta;
+    }
 }
 
 #[derive(Component)]
@@ -52,6 +60,7 @@ impl Default for CircleCollider {
     }
 }
 
+// update rigid body positions using verlet integration
 pub fn update_rigid_bodies(
     mut q: Query<(Entity, &mut Transform, &mut RigidBody)>,
     time: Res<Time>,
@@ -71,12 +80,14 @@ pub fn update_rigid_bodies(
     }
 }
 
+// makes particles bounce off walls
 pub fn resolve_wall_collisions(
     entity_map: Res<EntityMap>,
     mut q: Query<(&Transform, &mut RigidBody, &CircleCollider)>
 ) {
     // TODO: Calculate collisions with raycasts to be more precise
     // TODO: Get only entities that are on edge containers in the entity_map
+    // TODO: Change this to use some sort of constraints system
     for (t, mut rb, c) in q.iter_mut() {
         let x_size = entity_map.get_map_size().x / 2.0;
         let y_size = entity_map.get_map_size().y / 2.0;
@@ -113,6 +124,7 @@ pub fn resolve_particle_collisions(
     let mut entities = Vec::<Entity>::new();
     let mut comp_map = HashMap::<Entity,(Transform, RigidBody, CircleCollider)>::new();
 
+    // comp_map is needed to allow the next for loop to reference data from the other particles
     for (e, t, rb, c) in query.iter(world) {
         comp_map.insert(e,(t.clone(), rb.clone(), c.clone()));
         entities.push(e);
@@ -141,13 +153,17 @@ pub fn resolve_particle_collisions(
         }
 
         let mut total_additive_vel = Vec2::new(0.,0.);
+        let mut total_additive_pos = Vec2::new(0.,0.);
         for other in related {
             if other.index() == e.index() {
                 continue;
             }
             let (o_t,o_rb,o_c) = comp_map.get(&other).unwrap();
             let combined_radius = c.radius + o_c.radius;
+
+            // if colliding
             if t.translation.distance_squared(o_t.translation) < combined_radius*combined_radius {
+                println!("collision detected");
                 let collision_time = calculate_exact_collision_time(
                     t.translation.truncate(),
                     o_t.translation.truncate(),
@@ -155,10 +171,8 @@ pub fn resolve_particle_collisions(
                     o_rb.clone(),
                     combined_radius
                 );
-                println!("collisions time: {}", collision_time);
-
-                t.translation.x += rb.velocity.x * collision_time + 0.5 * rb.acceleration.x * collision_time * collision_time;
-                t.translation.y += rb.velocity.y * collision_time + 0.5 * rb.acceleration.y * collision_time * collision_time;
+                let precise_collision_pos = rb.calc_delta_position(collision_time);
+                total_additive_pos += precise_collision_pos;
 
                 let displacement = t.translation.truncate() - o_t.translation.truncate();
                 total_additive_vel += calculate_additive_collision_trajectory(
@@ -170,6 +184,8 @@ pub fn resolve_particle_collisions(
                 );
             }
         }
+        //t.translation.x += total_additive_pos.x;
+        //t.translation.y += total_additive_pos.y;
         rb.velocity += total_additive_vel;
     }
 }
@@ -188,56 +204,40 @@ fn calculate_additive_collision_trajectory(
     return v1_new;
 }
 
+// attempts to find the point of intersection between the trajectories of two particles
 fn calculate_exact_collision_time(
-    x1: Vec2,
-    x2: Vec2,
+    pos1: Vec2,
+    pos2: Vec2,
     rb1: RigidBody,
     rb2: RigidBody,
     combined_radius: f32,
 ) -> f32 {
-    let radius_vector = (x2 - x1).normalize_or_zero() * combined_radius;
+    // TODO: Make this function take acceleration into account
+    let radius_vector = (pos2 - pos1).normalize_or_zero() * combined_radius;
 
-    let a_x = 0.5 * (rb2.acceleration.x - rb1.acceleration.x);
-    let b_x = (rb2.velocity.x-rb2.acceleration.x) - (rb1.velocity.x-rb1.acceleration.x);
-    let c_x = x1.x - x2.x - radius_vector.x;
-    let mut t_x = (-c_x/b_x, -c_x/b_x);
-    if f32::is_nan(t_x.0) {
-        t_x = (f32::INFINITY, f32::INFINITY);
-    }
-    println!("t_x: {0}", t_x.0);
-    if a_x != 0.0 {
-        t_x = quadratic_formula(a_x, b_x, c_x);
-    }
-
-    let a_y = 0.5 * (rb2.acceleration.y - rb1.acceleration.y);
-    let b_y = (rb2.velocity.y-rb2.acceleration.y) - (rb1.velocity.y-rb1.acceleration.y);
-    let c_y = x1.y - x2.y - radius_vector.y;
-    let mut t_y = (-c_y/b_y, -c_y/b_y);
-    if f32::is_nan(t_y.0) {
-        t_y = (f32::INFINITY, f32::INFINITY);
-    }
-    println!("t_y: {0}", t_y.0);
-    if a_y != 0.0 {
-        t_y = quadratic_formula(a_y, b_y, c_y);
-    }
-
-    let t_x_0 = t_x.0;
-    let t_x_1 = t_x.1;
-    let t_y_0 = t_y.0;
-    let t_y_1 = t_y.1;
-
-    if f32::is_infinite(t_x.0) && f32::is_infinite(t_y.0)  {
+    let x_t = (radius_vector.x - pos2.x + pos1.x) / (rb2.velocity.x - rb1.velocity.x);
+    let y_t = (radius_vector.y - pos2.y + pos1.y) / (rb2.velocity.y - rb1.velocity.y);
+    if (x_t.is_nan() && y_t.is_nan()) {
         return 0.0;
-    } if f32::is_infinite(t_x.0) {
-        return t_y.0;
-    } if f32::is_infinite(t_y.0) {
-        return t_x.0;
     }
-
-    if t_x.0 == t_y.0 || t_x.0 == t_y.1 {
-        return t_x.0;
-    } if t_x.1 == t_y.1 || t_x.1 == t_y.0 {
-        return t_x.1;
+    if x_t == y_t {
+        println!("collision time: {x_t}");
+        return x_t;
+    }
+    if x_t < 0.0 && y_t.is_nan() {
+        println!("collision time: {x_t}");
+        return x_t;
+    }
+    if y_t < 0.0 && x_t.is_nan() {
+        println!("collision time: {y_t}");
+        return y_t;
     }
     return 0.0;
+}
+
+fn negative_or_zero(num: f32) -> f32 {
+    if num < 0.0 {
+        return num;
+    }
+    return -num;
 }
