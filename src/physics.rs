@@ -112,7 +112,12 @@ pub fn resolve_particle_collisions(
     if !world.contains_resource::<EntityMap>() {
         return;
     }
+    if !world.contains_resource::<Time>() {
+        return;
+    }
+
     let entity_map = world.get_resource::<EntityMap>().unwrap().clone();
+    let time = world.get_resource::<Time>().unwrap().clone();
 
     let mut query = world.query::<(
         Entity,
@@ -163,7 +168,6 @@ pub fn resolve_particle_collisions(
 
             // if colliding
             if t.translation.distance_squared(o_t.translation) < combined_radius*combined_radius {
-                println!("collision detected");
                 let collision_time = calculate_exact_collision_time(
                     t.translation.truncate(),
                     o_t.translation.truncate(),
@@ -175,17 +179,23 @@ pub fn resolve_particle_collisions(
                 total_additive_pos += precise_collision_pos;
 
                 let displacement = t.translation.truncate() - o_t.translation.truncate();
-                total_additive_vel += calculate_additive_collision_trajectory(
+                let additive_vel = calculate_additive_collision_trajectory(
                     rb.velocity,
                     o_rb.velocity,
                     rb.mass,
                     o_rb.mass,
                     displacement,
                 );
+                total_additive_vel += additive_vel;
+
+                // attempt to move particles to where they should be assuming they collided at the right moment
+                let dt = time.delta_seconds() + collision_time;
+                //total_additive_pos.x += additive_vel.x*dt + (0.5)*rb.acceleration.x*dt*dt;
+                //total_additive_pos.y += additive_vel.y*dt + (0.5)*rb.acceleration.y*dt*dt;
             }
         }
-        //t.translation.x += total_additive_pos.x;
-        //t.translation.y += total_additive_pos.y;
+        t.translation.x += total_additive_pos.x;
+        t.translation.y += total_additive_pos.y;
         rb.velocity += total_additive_vel;
     }
 }
@@ -213,6 +223,10 @@ fn calculate_exact_collision_time(
     combined_radius: f32,
 ) -> f32 {
     // TODO: Make this function take acceleration into account
+    // TODO: Fix problem with time coming out positive sometimes
+    // I think the particles sometimes overlap too much and it causes the radius vector to be pointing
+    // opposite where you would intuitively think it would point
+    // this causes the rest of the calculations to be wrong
     let radius_vector = (pos2 - pos1).normalize_or_zero() * combined_radius;
 
     let x_t = (radius_vector.x - pos2.x + pos1.x) / (rb2.velocity.x - rb1.velocity.x);
@@ -232,6 +246,7 @@ fn calculate_exact_collision_time(
         println!("collision time: {y_t}");
         return y_t;
     }
+    println!("what??? {x_t}, {y_t}");
     return 0.0;
 }
 

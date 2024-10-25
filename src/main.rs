@@ -68,7 +68,7 @@ fn setup(
         &mut entity_map,
         pos1,
         10.0,
-        Vec2::new(50.0,0.0),
+        Vec2::new(25.0,0.0),
         Vec2::new(0.0,0.0),
         2.0
     );
@@ -81,35 +81,9 @@ fn setup(
         &mut entity_map,
         pos2,
         10.0,
-        Vec2::new(-50.0, 0.0),
+        Vec2::new(-25.0, 0.0),
         Vec2::new(0.0, 0.0),
         2.0
-    );
-
-    let pos3 = Vec2::new(0.0, 45.0);
-    add_particle(
-        &mut commands,
-        &mut meshes,
-        &mut materials,
-        &mut entity_map,
-        pos3,
-        10.0,
-        Vec2::new(0.0, -50.0),
-        Vec2::new(0.0, 0.0),
-        2.0
-    );
-
-    let pos4 = Vec2::new(0.0, -45.0);
-    add_particle(
-        &mut commands,
-        &mut meshes,
-        &mut materials,
-        &mut entity_map,
-        pos4,
-        10.0,
-        Vec2::new(0.0, 50.0),
-        Vec2::new(0.0, 0.0),
-        2.0,
     );
 
     //entity_map.print_filled_containers();
